@@ -8,14 +8,15 @@ function getRandomColor(){
   return "hsl(" + Math.random() * 360 + ", 100%, 75%)";
 }
 
-const addNote = ()=>{
+const addNote = () => {
   notes.value.push({
     id: Math.floor(Math.random()*1000000),
     text: newNote.value,
     date: new Date(),
     backgroundColor: getRandomColor()
   });
-  showModal = false;
+  showModal.value = false;
+  newNote.value = '';
 }
 </script>
 
@@ -24,7 +25,7 @@ const addNote = ()=>{
     <div v-if="showModal" class="overlay">
       <div class="modal">
         <textarea name="note" id="note" cols="30" rows="10" v-model="newNote"></textarea>
-        <button>Add note</button>
+        <button @click="addNote">Add note</button>
         <button @click="showModal=false" class="close">close</button>
       </div>
     </div>
