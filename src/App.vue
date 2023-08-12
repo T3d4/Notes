@@ -34,14 +34,10 @@ const addNote = () => {
         <h1>Notes</h1>
         <button @click="showModal=true">+</button>
       </header>
-      <div class="cards-container">
-        <div class="card">
-          <p class="main-text">Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nam quod laudantium quibusdam harum molestiae exercitationem iste eaque soluta cum, nemo atque dolorem mollitia commodi voluptas.</p>
-          <p class="date">11/08/2023</p>
-        </div>
-        <div class="card">
-          <p class="main-text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Quas illo necessitatibus deserunt quam architecto quis.</p>
-          <p class="date">11/08/2023</p>
+      <div class="cards-container" v-for="note in notes">
+        <div class="card" :style="{backgroundColor: note.backgroundColor}">
+          <p class="main-text"> {{ note.text }} </p>
+          <p class="date"> {{ note.date }} </p>
         </div>
       </div>
     </div>
@@ -96,6 +92,7 @@ const addNote = () => {
     justify-content: space-between;
     margin-right: 20px;
     margin-bottom: 20px;
+    color: black;
   }
 
   .date{
