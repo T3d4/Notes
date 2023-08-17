@@ -1,77 +1,19 @@
 <script async setup>
 import { ref, onUnmounted } from "vue";
-import config from "./config";
-import { initializeApp } from "firebase/app";
-import {
-  getFirestore,
-  onSnapshot,
-  deleteDoc,
-  collection,
-  addDoc,
-  doc,
-  query,
-} from "firebase/firestore";
+import { addNote, deleteNote, notes, newNote } from "./server/server";
 
-const app = initializeApp(config);
-const db = getFirestore(app);
 const showModal = ref(false);
-const newNote = ref("");
-const notes = ref([]);
+
 const errorMessage = ref("");
 
-function getRandomColor() {
-  return "hsl(" + Math.random() * 360 + ", 100%, 75%)";
-}
-
-const fDate = (date) => {
-  const dateInput = new Date(date);
-  return dateInput.toLocaleDateString("en-UK");
+const openModal = (selectedNote) => {
+  newNote.value = selectedNote;
+  showModal.value = true;
 };
 
-const dbRef = collection(db, "notes");
-
-const dbNotes = onSnapshot(dbRef, (docsSnap) => {
-  docsSnap.docChanges().forEach((n) => {
-    const existingNote = notes.value.find((note) => note.id === n.doc.id);
-    console.log("data-Updated", n.doc.data());
-    if (n.type === "added") {
-      notes.value.push({
-        id: n.doc.id,
-        text: n.doc.data().text,
-        date: fDate(n.doc.data().date.toDate()),
-        bgColor: n.doc.data().bgColor,
-      });
-    }
-    if (n.type === "modified") {
-    }
-    if (n.type === "removed") {
-      const noteIndex = notes.value.findIndex((note) => note.id == n.doc.id);
-      console.log(noteIndex, "Index");
-      if (noteIndex !== -1) {
-        notes.value.splice(noteIndex, 1);
-      }
-    }
-  });
-});
-
-const addNote = async () => {
-  if (newNote.value.length < 9) {
-    return (errorMessage.value = "Note needs 10 characters or more");
-  }
-  addDoc(collection(db, "notes"), {
-    text: newNote.value,
-    date: new Date(),
-    bgColor: getRandomColor(),
-  });
-
+const closeModal = () => {
   showModal.value = false;
   newNote.value = "";
-  await Promise.all([addNote()]);
-  errorMessage.value = "";
-};
-
-const deleteNote = async (noteId) => {
-  await deleteDoc(doc(db, "notes", noteId));
 };
 
 onUnmounted(() => dbNotes());
@@ -89,31 +31,35 @@ onUnmounted(() => dbNotes());
           v-model.trim="newNote"
         ></textarea>
         <p v-if="errorMessage">{{ errorMessage }}</p>
-        <button @click="addNote">Add note</button>
-        <button @click="showModal = false" class="close">close</button>
+        <button @click="addNote()">Add note</button>
+        <button @click="closeModal" class="close">close</button>
       </div>
     </div>
     <div class="container">
       <header>
         <h1>Notes</h1>
-        <button @click="showModal = true">+</button>
       </header>
       <div class="cards-container">
+        <!-- CARD HOLDING THE DATA -->
         <div
           class="card"
           v-for="note in notes"
           :key="note.id"
           :style="{ backgroundColor: note.bgColor }"
+          @click.stop="openModal(note.text)"
         >
           <div class="delete-btn">
-            <button @click="deleteNote(note.id)" type="button">
+            <button @click.stop="deleteNote(note)" type="button">
               <font-awesome-icon icon="fa-solid fa-xmark" size="lg" />
             </button>
           </div>
+
           <p class="main-text">{{ note.text }}</p>
           <p class="date">{{ note.date }}</p>
         </div>
       </div>
+      <!-- BUTTON FOR ADDING NOTE -->
+      <button class="add-note" @click="showModal = true">+</button>
     </div>
   </main>
 </template>
@@ -138,21 +84,26 @@ header {
 
 h1 {
   font-weight: bold;
-  margin-bottom: 25px;
+  margin-bottom: 10px;
   font-size: 75px;
 }
 
-header button {
+.add-note {
   border: none;
   padding: 10px;
-  width: 70px;
-  height: 70px;
+  width: 60px;
+  height: fit-content;
   cursor: pointer;
   background-color: steelblue;
   border-radius: 100%;
   color: white;
   font-size: 40px;
-  margin-right: 30%;
+  display: flex;
+  margin-left: auto;
+  margin-right: 2%;
+  margin-bottom: 3%;
+  justify-content: center;
+  float: right;
 }
 
 .card {
