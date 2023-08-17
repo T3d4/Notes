@@ -15,14 +15,12 @@ const openModal = (note) => {
   newNote.value = note.text;
   showModal.value = true;
   selectedNote.value = note;
-  console.log(selectedNote.value, "selected Value")
 };
 
 const closeModal = () => {
   showModal.value = false;
   newNote.value = "";
 };
-
 onUnmounted(() => dbNotes());
 </script>
 
@@ -31,6 +29,7 @@ onUnmounted(() => dbNotes());
     <div v-if="showModal" class="overlay">
       <div class="modal">
         <textarea
+          ref="inputArea"
           name="note"
           id="note"
           cols="30"
