@@ -8,14 +8,14 @@ import {
   showModal,
   errorMessage,
   dbNotes,
+  selectedNote,
 } from "./server/server";
 
-let noteId;
-
-const openModal = (selectedNote) => {
-  newNote.value = selectedNote.text;
+const openModal = (note) => {
+  newNote.value = note.text;
   showModal.value = true;
-  noteId = selectedNote.id;
+  selectedNote.value = note;
+  console.log(selectedNote.value, "selected Value")
 };
 
 const closeModal = () => {
@@ -38,7 +38,7 @@ onUnmounted(() => dbNotes());
           v-model.trim="newNote"
         ></textarea>
         <p v-if="errorMessage">{{ errorMessage }}</p>
-        <button @click="addNote(noteId)">Add note</button>
+        <button @click="addNote">Add note</button>
         <button @click="closeModal" class="close">close</button>
       </div>
     </div>

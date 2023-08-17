@@ -5,6 +5,7 @@ import {
     collection,
     addDoc,
     doc,
+    updateDoc,
 } from "firebase/firestore";
 import config from "../config";
 import { initializeApp } from "firebase/app";
@@ -17,10 +18,12 @@ const notes = ref([]);
 const newNote = ref("");
 const showModal = ref(false);
 const errorMessage = ref("");
+const selectedNote = ref({});
 
-function getRandomColor() {
+
+const getRandomColor = () => {
     return "hsl(" + Math.random() * 360 + ", 100%, 75%)";
-}
+};
 
 const fDate = (date) => {
     const dateInput = new Date(date);
@@ -29,43 +32,58 @@ const fDate = (date) => {
 
 const dbNotes = onSnapshot(dbRef, (docsSnap) => {
     docsSnap.docChanges().forEach((n) => {
-
         if (n.type === "added") {
-            notes.value.push({
-                id: n.doc.id,
-                text: n.doc.data().text,
-                date: fDate(n.doc.data().date.toDate()),
-                bgColor: n.doc.data().bgColor,
-            });
+            if (!notes.value.find(note => note.id == n.doc.id)) {
+                notes.value.push({
+                    id: n.doc.id,
+                    text: n.doc.data().text,
+                    date: fDate(n.doc.data().date.toDate()),
+                    bgColor: n.doc.data().bgColor,
+                });
+            }
         }
         if (n.type === "modified") {
+            const noteIndex = notes.value.findIndex(note => note.id == n.doc.id);
+            notes.value[noteIndex].text = n.doc.data().text;
         }
         if (n.type === "removed") {
             const noteIndex = notes.value.findIndex((note) => note.id == n.doc.id);
-            console.log(noteIndex, "Index");
             if (noteIndex !== -1) {
                 notes.value.splice(noteIndex, 1);
             }
         }
-        console.log("data-Updated", n.doc.data());
     });
 });
 
-const addNote = async (noteId) => {
+const addNote = async () => {
+    const newText = newNote.value
+    const id = selectedNote.value.id
     if (newNote.value.length < 9) {
         return (errorMessage.value = "Note needs 10 characters or more");
     }
-    console.log(noteId)
 
-    addDoc(collection(db, "notes"), {
-        text: newNote.value,
-        date: new Date(),
-        bgColor: getRandomColor(),
-    });
+    // CHECKS IF NOTE EXISTS AND UPDATES
+    if (id) {
+        const docRef = doc(db, "notes", id)
+        updateDoc(docRef, {
+            text: newText
+        })
+        showModal.value = false;
+        newNote.value = "";
+        selectedNote.value = "";
+    }
 
-    showModal.value = false;
-    newNote.value = "";
-    await Promise.all([addNote()]);
+    if (!id) {
+        addDoc(collection(db, "notes"), {
+            text: newNote.value,
+            date: new Date(),
+            bgColor: getRandomColor(),
+        });
+        showModal.value = false;
+        newNote.value = "";
+    }
+
+    await Promise.all([addNote, updateDoc, addDoc]);
     errorMessage.value = "";
 };
 
@@ -76,5 +94,5 @@ const deleteNote = async (noteId) => {
 
 export {
     dbNotes, deleteNote, addNote,
-    notes, newNote, showModal, errorMessage
+    notes, newNote, showModal, errorMessage, selectedNote
 }
