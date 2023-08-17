@@ -1,5 +1,5 @@
 <script async setup>
-import { ref } from "vue";
+import { ref, onUnmounted } from "vue";
 import config from "./config";
 import { initializeApp } from "firebase/app";
 import {
@@ -28,20 +28,27 @@ const fDate = (date) => {
   return dateInput.toLocaleDateString("en-UK");
 };
 
-const q = query(collection(db, "notes"));
-const dbNotes = onSnapshot(q, (note) => {
-  console.log(note);
+const dbRef = collection(db, "notes");
 
-  note.docChanges().forEach((n) => {
+const dbNotes = onSnapshot(dbRef, (docsSnap) => {
+  docsSnap.docChanges().forEach((n) => {
     const existingNote = notes.value.find((note) => note.id === n.doc.id);
-    if (!existingNote) {
-      if (n.type === "added") {
-        notes.value.push({
-          id: n.doc.id,
-          text: n.doc.data().text,
-          date: fDate(n.doc.data().date.toDate()),
-          bgColor: n.doc.data().bgColor,
-        });
+    console.log("data-Updated", n.doc.data());
+    if (n.type === "added") {
+      notes.value.push({
+        id: n.doc.id,
+        text: n.doc.data().text,
+        date: fDate(n.doc.data().date.toDate()),
+        bgColor: n.doc.data().bgColor,
+      });
+    }
+    if (n.type === "modified") {
+    }
+    if (n.type === "removed") {
+      const noteIndex = notes.value.findIndex((note) => note.id == n.doc.id);
+      console.log(noteIndex, "Index");
+      if (noteIndex !== -1) {
+        notes.value.splice(noteIndex, 1);
       }
     }
   });
@@ -56,15 +63,18 @@ const addNote = async () => {
     date: new Date(),
     bgColor: getRandomColor(),
   });
+
   showModal.value = false;
   newNote.value = "";
-  errorMessage.value = "";
   await Promise.all([addNote()]);
+  errorMessage.value = "";
 };
 
 const deleteNote = async (noteId) => {
   await deleteDoc(doc(db, "notes", noteId));
 };
+
+onUnmounted(() => dbNotes());
 </script>
 
 <template>
@@ -146,9 +156,8 @@ header button {
 }
 
 .card {
-  width: 225px;
-  height: 225px;
   background-color: rgb(237, 182, 44);
+  height: 230px;
   padding: 10px;
   border-radius: 15px;
   margin: 10px;
@@ -157,19 +166,21 @@ header button {
   color: black;
   word-wrap: break-word;
   box-sizing: border-box;
+  overflow: hidden;
+  flex-wrap: nowrap;
+  flex: 225px;
   transition: transform 0.6s;
-  transition-property: font-size;
 }
 
 .card:hover {
   transform: scale(1.05);
-  font-size: large;
 }
 
 .date {
-  font-size: 12.5px;
+  font-size: 14.5px;
   font-weight: bold;
-  margin-top: auto;
+  position: absolute;
+  align-items: flex-start;
 }
 
 .cards-container {
