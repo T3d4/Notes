@@ -1,14 +1,21 @@
 <script async setup>
 import { ref, onUnmounted } from "vue";
-import { addNote, deleteNote, notes, newNote } from "./server/server";
+import {
+  addNote,
+  deleteNote,
+  notes,
+  newNote,
+  showModal,
+  errorMessage,
+  dbNotes,
+} from "./server/server";
 
-const showModal = ref(false);
-
-const errorMessage = ref("");
+let noteId;
 
 const openModal = (selectedNote) => {
-  newNote.value = selectedNote;
+  newNote.value = selectedNote.text;
   showModal.value = true;
+  noteId = selectedNote.id;
 };
 
 const closeModal = () => {
@@ -31,7 +38,7 @@ onUnmounted(() => dbNotes());
           v-model.trim="newNote"
         ></textarea>
         <p v-if="errorMessage">{{ errorMessage }}</p>
-        <button @click="addNote()">Add note</button>
+        <button @click="addNote(noteId)">Add note</button>
         <button @click="closeModal" class="close">close</button>
       </div>
     </div>
@@ -46,7 +53,7 @@ onUnmounted(() => dbNotes());
           v-for="note in notes"
           :key="note.id"
           :style="{ backgroundColor: note.bgColor }"
-          @click.stop="openModal(note.text)"
+          @click.stop="openModal(note)"
         >
           <div class="delete-btn">
             <button @click.stop="deleteNote(note)" type="button">

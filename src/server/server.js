@@ -15,6 +15,8 @@ const db = getFirestore(app);
 const dbRef = collection(db, "notes");
 const notes = ref([]);
 const newNote = ref("");
+const showModal = ref(false);
+const errorMessage = ref("");
 
 function getRandomColor() {
     return "hsl(" + Math.random() * 360 + ", 100%, 75%)";
@@ -27,7 +29,7 @@ const fDate = (date) => {
 
 const dbNotes = onSnapshot(dbRef, (docsSnap) => {
     docsSnap.docChanges().forEach((n) => {
-        console.log("data-Updated", n.doc.data());
+
         if (n.type === "added") {
             notes.value.push({
                 id: n.doc.id,
@@ -45,6 +47,7 @@ const dbNotes = onSnapshot(dbRef, (docsSnap) => {
                 notes.value.splice(noteIndex, 1);
             }
         }
+        console.log("data-Updated", n.doc.data());
     });
 });
 
@@ -52,6 +55,7 @@ const addNote = async (noteId) => {
     if (newNote.value.length < 9) {
         return (errorMessage.value = "Note needs 10 characters or more");
     }
+    console.log(noteId)
 
     addDoc(collection(db, "notes"), {
         text: newNote.value,
@@ -70,4 +74,7 @@ const deleteNote = async (noteId) => {
 };
 
 
-export { dbNotes, deleteNote, addNote, notes, newNote }
+export {
+    dbNotes, deleteNote, addNote,
+    notes, newNote, showModal, errorMessage
+}
