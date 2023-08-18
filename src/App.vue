@@ -1,5 +1,5 @@
 <script async setup>
-import { ref, onUnmounted } from "vue";
+import { onUnmounted } from "vue";
 import {
   addNote,
   deleteNote,
